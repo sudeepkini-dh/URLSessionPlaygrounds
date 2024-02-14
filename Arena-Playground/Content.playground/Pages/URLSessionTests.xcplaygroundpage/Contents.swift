@@ -3,6 +3,22 @@
 import UIKit
 import Foundation
 
+
+// we will need
+class WrapperDelegate: URLSessionTaskDelegate {
+  var originalDelegate: URLSessionTaskDelegate
+}
+
+extension URLRequest {
+  var requestSignature() -> String {
+    // retrun a unique hash based on url, http method type if avaialbe and http body
+    return ""
+  }
+}
+
+
+// 'URLProtocol' intersecption may be a intresting approch for interception and mocking the reponse But Dosn't seam to provide a way to record.
+// We might need to copy over thw URL request to our own session and use its delegate protocol to retrive the response.
 class RestAPIExampleCustomUrlProtocol: URLProtocol {
 
   static var isReplaying = false
@@ -19,7 +35,10 @@ class RestAPIExampleCustomUrlProtocol: URLProtocol {
     }
 
     if isReplaying == true {
+      //create auni
       return true
+    } else {
+      // capture the delegate and override it with a wrapper delegate.
     }
 
     print("Reponse \(task.response)")
@@ -44,11 +63,18 @@ class RestAPIExampleCustomUrlProtocol: URLProtocol {
   }
 
   override func startLoading() {
+    if isReplaying == true {
+      // 1. Retrive URL response data from Journal
+      // 2. Generate URL response object
+      // 3. wait for a specific delay - a config parameter
+      // 4. call  `self.client?.urlProtocol(<#T##protocol: URLProtocol##URLProtocol#>, didReceive: <#T##URLResponse#>, cacheStoragePolicy: <#T##URLCache.StoragePolicy#>)`
 
+
+    }
   }
 
   override func stopLoading() {
-
+     if is
   }
 
 }
@@ -61,10 +87,11 @@ URLProtocol.registerClass(RestAPIExampleCustomUrlProtocol.self)
 let urlsessionCongif = URLSessionConfiguration.default
 // register custom URL protocol at Session level
 // regsiters protocol classes for session generated using custom configuration
+// Intresting to note `canInit(with request: URLRequest)` seems to be only called when using custom session with `.protocolClasses` set.
+// `canInit(with task: URLSessionTask)` is called in both cases
+// 
 urlsessionCongif.protocolClasses = [RestAPIExampleCustomUrlProtocol.self]
 //Register session at global level - we have to test this
-
-//URLProtocol.registerClass(CustomUrlProtocol2)
 
 let urlSession = URLSession(configuration: urlsessionCongif)
 
