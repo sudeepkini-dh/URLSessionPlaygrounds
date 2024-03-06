@@ -6,5 +6,6 @@
         <page name='URLProtcol+swizzling'/>
         <page name='URLSessionSubClassing'/>
         <page name='URLSession+swizzling'/>
+        <page name='NetworkRecorder'/>
     </pages>
 </playground>
