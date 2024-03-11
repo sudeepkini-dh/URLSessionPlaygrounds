@@ -20,9 +20,8 @@ class TestProtocol: URLProtocol {
   override class func canInit(with request: URLRequest) -> Bool {
     print("\n\n ==== Inside class: \(String(describing: self)) function: \(#function) ===")
     // notice that request body isn't available here
-    // this is becase as soon as you task is "resumed" httpbody get converted into data
-    // stream objecton the URLSessionTask. that why we have "originaltask" property on
-    // which is probably a copy
+    // this is becase as soon as you task is "resumed" httpbody get converted into a data
+    // stream object on the URLSessionTask. Probably why we have "originaltask" property on URLSessionTask which is a copy.
     request.prettyPrint()
     return intercept
   }
@@ -41,7 +40,7 @@ class TestProtocol: URLProtocol {
     // notice if you try to get data from request object here body will be missing
     // instead we have to use 'originalRequest' param on task Object.
     request.prettyPrint()
-    // why is task optionla here?
+    // why is task optionl here?
     task?.originalRequest?.prettyPrint()
 
     let response = HTTPURLResponse(
@@ -52,8 +51,7 @@ class TestProtocol: URLProtocol {
     )
     guard let response = response else { return }
     client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-    // this will passed to completion handler 'data' value
-
+    // this will be passed to completion handler for the Data task and Task delegate as 'data' value
     client?.urlProtocol(self, didLoad: testResponseData)
     // notice you can keep calling didload data till 'urlProtocolDidFinishLoading' is called
     //    let testDataSplit =  testResponseData.split(separator: 0x6d)
@@ -61,7 +59,7 @@ class TestProtocol: URLProtocol {
     //      client?.urlProtocol(self, didLoad: data)
     //    }
     //this call will tell client that loading is complete and will lead to calling "stoploading()"
-    // if you don't call this function before session timeout it will case url request ot fail
+    // if you don't call this function before session timeout it will cause url request ot fail
     client?.urlProtocolDidFinishLoading(self)
   }
 
@@ -70,7 +68,7 @@ class TestProtocol: URLProtocol {
   }
 
   override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: URLProtocolClient?) {
-    // we can catpure the request here
+    // we can try catpure the request here
     super.init(request: request, cachedResponse: cachedResponse, client: client)
   }
 }
@@ -107,8 +105,8 @@ class NetworkObserverProtocol: URLProtocol {
   // Since we are using our own internal session and creating
   // our own shadow tasks, we will need to forward `delegate`
   // calls to original task 'delegate'. This can be done
-  // partially using the `client` property or by using delegate
-  // property on the `task` property (set by URLProtocol)
+  // partially using the `client` property (set by URLProtocol)
+  // or by using delegate property on the original task.
 
   // check `URLProtocolClient` documentation for available
   // functions. or check implementation below.
@@ -116,7 +114,7 @@ class NetworkObserverProtocol: URLProtocol {
   // Also Notice that there is no way to get instance of the
   // original URLSession. Hence its delegate so we will loose
   // any buisness logic that is implemented with using session
-  // delegate eg: responsding to auth challenges. storing cookies etc
+  // delegate eg: responsding to auth challenges, storing cookies etc.
   static let session = URLSession(configuration: .ephemeral)
 
   // must be implemented else it will cause a crash
@@ -134,7 +132,7 @@ class NetworkObserverProtocol: URLProtocol {
 
   override class func canonicalRequest(for request: URLRequest) -> URLRequest {
     // notice that this function is only called if canInit returns true
-    // notice header configurations Headers are available here
+    // notice headers set via Session configurations are available here
     print("\n\n ==== Inside class: \(String(describing: self)) function: \(#function) ===")
     request.prettyPrint()
     //can possibly modify request here
@@ -143,9 +141,9 @@ class NetworkObserverProtocol: URLProtocol {
 
   override func startLoading() {
     print("\n\n ==== Inside class: \(String(describing: self)) function: \(#function) ===")
-    // notice if you try to get data from request object here body will be missing
+    // notice if you try to get data from request object here, body will be missing
     // instead we have to use 'originalRequest' param on task Object.
-    // interesting pary `request` object had Configuration level headers but `task.originalRequest` does not.
+    // here `request` object had Configuration level headers but `task.originalRequest` does not.
     request.prettyPrint()
     print("\nThe original request\n")
     // why is task optional here?
@@ -155,7 +153,7 @@ class NetworkObserverProtocol: URLProtocol {
     Task.detached { [self] in
 
       do {
-        // notice here that we are using our own data task to get the actul response
+        // notice here that we are using our own data task to get the actual response
         // Also note that this can cause an infinite loop if this procotol is appied
         // to Default session or to all sessions using swizzling.
         // solution: https://github.com/apple/swift-corelibs-foundation/issues/4324
@@ -194,21 +192,21 @@ URLProtocol.registerClass(NetworkObserverProtocol.self)
 //let session4 = URLSession.shared
 //runPostRequestUsingTask(with: session4, and: nil)
 
-// note you will need to Set URLProtocols when you create your own session
-// here NetworkObserverProtocol is not checked with
+// Notice that you will need to set URLProtocols when you create your own session
+// here NetworkObserverProtocol is not checked with unless explicitly registered using session configuration.
 
 //let config5 = URLSessionConfiguration.default
 //let session5 = URLSession(configuration: config5)
 //runPostRequestUsingTask(with: session5, and: nil)
 
-// Note that for shared the last registered protocol is asked first for "canInit". if it
+// Notice that the last registered protocol is asked first for "canInit". if it
 // retruns `yes` then Loading system will had over the request to an instance of that class
 // and not forward it to any other protocol. If it returns `no` is will check with the next
 // in line
 // URLProtocol.registerClass(TestProtocol.self)
 
-// This can be problematic as other frameworks and objects can register for their protocols
-// hence we will a way to ensure our protocol remains first inline.
+// This can be problematic as other frameworks and objects can register  their protocols after we have ours
+// hence we will a way to ensure our protocol remains first in line.
 
 // configuratioh headers test
 
@@ -269,8 +267,8 @@ extension NetworkObserverProtocolV2: URLSessionDataDelegate {
 
     // Notice here we are using our own handling for Authentication challenge.
     // there is no way to pass this on to original session delegate. We may get
-    // licky if the `task.delegate` is the data delegate. But even then URLSession
-    // object that we pass on will not be  the same.
+    // lucky if the `task.delegate` is the data delegate. But even then URLSession
+    // object that we pass on will not be the same.
 
 
     // This may not be a problem in unit testing environment as stageing server

@@ -18,7 +18,7 @@ typealias URLTaskCompletion = (Data?,URLResponse?,Error?) -> Void
 // As demonstrated below you cannot subclass URLSession as
 // the initalizers that we commonly use are "dummy" ones and
 // cannot be called from sub class.
-// at comlie time ou will get following error:
+// At compile time you will get following error:
 // error: must call a designated initializer of the superclass 'URLSession'
 // super.init(configuration: configuration)
 // ^
